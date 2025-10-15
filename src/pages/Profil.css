@@ -1,0 +1,56 @@
+.profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .image-container {
+    margin-bottom: 20px;
+  }
+  
+  .profile-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #ccc;
+  }
+  
+  .placeholder {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+    font-size: 16px;
+    color: #888;
+    border-radius: 50%;
+    border: 3px dashed #ccc;
+  }
+  
+  .available-images {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+  
+  .image-option {
+    cursor: pointer;
+    border: 2px solid transparent;
+    padding: 5px;
+    border-radius: 50%;
+    transition: 0.3s ease;
+  }
+  
+  .image-option img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  
+  .image-option.selected {
+    border: 3px solid #007bff;
+  }
+  

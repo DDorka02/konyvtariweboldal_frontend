@@ -1,23 +1,32 @@
-import logo from './logo.svg';
-import './App.css';
+import { Route, Routes } from "react-router-dom";
+import "./App.css";
+
+import NoPage from "./pages/Nopage";
+import Public from "./pages/Public";
+import Konyvek from "./components/public/Konyvek";
+import Layout from "./pages/Layout";
+import Profil from "./pages/Profil";
+import CsereAjanlat from "./components/public/CsereAjanlat";
+import Konyveim from "./components/public/Konyveim";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <div>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route path="/*" element={<Public />} />
+            <Route path="*" element={<NoPage />} />
+            <Route path="/konyv" element={<Konyvek />} />
+            <Route path="/profil" element={<Profil />} />
+            <Route path="/csere-ajanlat" element={<CsereAjanlat />} />
+            <Route path="/konyveim" element={<Konyveim />} />
+
+            {/* <Route path="/elfelejtett-jelszo" element={<Elfelejtettjelszo />} />
+            <Route path="/password-reset" element={<ResetPassword />} /> */}
+          </Route>
+        </Routes>
+      </div>
     </div>
   );
 }
