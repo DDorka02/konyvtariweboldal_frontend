@@ -68,14 +68,8 @@ export default function Bejelentkezes() {
           <h2>Üdvözöllek a Könyvek boltja weboldalán!</h2>
           <p>Ha van már fiókod, kérlek jelentkezz be!<br />
    Regisztrálni alul a regisztráció gombra kattintva lehet. ⇣</p>
-          <img
-            src="/kepek/hal.png"
-            alt="Bejelentkezés illusztráció"
-            className="bejelentkezes-kep"
-            style={{ width: "100%", height: "auto" }} 
-          />
+          
         </Col>
-        {/* Regisztrációs rész */}
         <Col xs={12} className="regisztracio">
           <div className="text-center mt-3">
             <p>

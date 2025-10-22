@@ -90,20 +90,13 @@ export default function Regisztralas() {
           </Form>
         </Col>
         <Col xs={6} className="textdoboz">
-          <h2>Üdvözöllek a Blub weboldalán!</h2>
+          <h2>Üdvözöllek a Könyvek boltja weboldalán!</h2>
           <p>
             Ha még nincs fiókod, kérlek regisztrálj!
             <br />
             Bejelentekezni alul a bejelentkezés gombra kattintva lehet. ⇣
           </p>
-          <img
-            src="/kepek/hal.png"
-            alt="Bejelentkezés illusztráció"
-            className="bejelentkezes-kep"
-            style={{ width: "100%", height: "auto" }}
-          />
         </Col>
-        {/* Bejelentkezes rész */}
         <Col xs={12} className="login">
           <div className="text-center mt-3">
             <p>

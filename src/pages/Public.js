@@ -8,6 +8,7 @@ export default function Public() {
   return (
     <div>
       <Routes>
+        {/* Bejelentkezés és regisztráció */}
         <Route path="/bejelentkezes" element={<Bejelentkezes />} />
         <Route path="/regisztralas" element={<Regisztralas />} />
       </Routes>

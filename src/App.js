@@ -8,6 +8,8 @@ import Layout from "./pages/Layout";
 import Profil from "./pages/Profil";
 import CsereAjanlat from "./components/public/CsereAjanlat";
 import Konyveim from "./components/public/Konyveim";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -21,9 +23,8 @@ function App() {
             <Route path="/profil" element={<Profil />} />
             <Route path="/csere-ajanlat" element={<CsereAjanlat />} />
             <Route path="/konyveim" element={<Konyveim />} />
-
-            {/* <Route path="/elfelejtett-jelszo" element={<Elfelejtettjelszo />} />
-            <Route path="/password-reset" element={<ResetPassword />} /> */}
+            <Route path="/elfelejtett-jelszo" element={<ForgotPassword />} />
+            <Route path="/password-reset" element={<ResetPassword />} />
           </Route>
         </Routes>
       </div>

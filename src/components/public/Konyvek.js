@@ -1,47 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import './Konyv.css';
-import { Row, Col, Modal, Button, Card, Badge } from 'react-bootstrap';
+import { Row, Col, Button, Card, Badge } from 'react-bootstrap';
 import { myAxios } from '../../contexts/MyAxios';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom'; // 🔥 IMPORTÁLD
+import { useNavigate } from 'react-router-dom'; 
 
 const Konyvek = () => {
+    //const { konyvLista } = useAdminContext();
     const [konyvek, setKonyvek] = useState([]); 
     const [loading, setLoading] = useState(true); 
     const [error, setError] = useState(null); 
-    const [selectedKonyv, setSelectedKonyv] = useState(null); 
-    const [showModal, setShowModal] = useState(false);
     const [expandedKonyvId, setExpandedKonyvId] = useState(null);
     const { user } = useAuth();
-    const navigate = useNavigate(); // 🔥 HOZD LÉTRE
+    const navigate = useNavigate();
 
-   useEffect(() => {
-    console.log('Token:', localStorage.getItem('token'));
-    console.log('User:', localStorage.getItem('user'));
+    useEffect(() => {
+        console.log('Token:', localStorage.getItem('token'));
+        console.log('User:', localStorage.getItem('user'));
 
-    myAxios.get('/api/konyvek')
-      .then(response => {
-        console.log('Sikeres válasz:', response.data);
-        const data = response.data || [];
-        setKonyvek(data); 
-        setLoading(false); 
-      })
-      .catch(err => {
-        console.error('Hiba részletei:', err.response?.data);
-        setError(err.response?.data?.message || err.message); 
-        setLoading(false); 
-      });
-}, []);
-
-    const handleSelectKonyv = (konyv) => {
-        setSelectedKonyv(konyv);
-        setShowModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setShowModal(false);
-        setSelectedKonyv(null);
-    };
+        myAxios.get('/api/konyvek')
+          .then(response => {
+            const data = response.data || [];
+            setKonyvek(data); 
+            setLoading(false); 
+          })
+          .catch(err => {
+            setError(err.message); 
+            setLoading(false); 
+          });
+      }, []);
 
     const handleToggleDetails = (konyvId) => {
         if (expandedKonyvId === konyvId) {
@@ -59,7 +46,6 @@ const Konyvek = () => {
         
         console.log('Könyv kérése:', konyv);
         
-        // 🔥 ÁTNAVIGÁLÁS A CSERE OLDALRA
         navigate('/csere-ajanlat', { 
             state: { 
                 kivalasztottKonyv: konyv 
@@ -86,34 +72,27 @@ const Konyvek = () => {
                     >
                         <Card className="shadow-sm book-card h-100">
                             <div className="row g-0 h-100">
-                                {/* Könyv kép */}
                                 <div className="col-12">
                                     <div className="d-flex align-items-center justify-content-center p-3 bg-light">
                                         <img 
                                             src={"http://localhost:8000/" + (konyv.kep || '')}
                                             alt={konyv.cim}
                                             className="img-fluid rounded"
-                                            style={{ 
+                                            style={{
                                                 maxHeight: '180px',
                                                 objectFit: 'cover',
                                                 boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                                            }}
-                                            onError={(e) => {
-                                                e.target.src = '/images/default-book.jpg';
                                             }}
                                         />
                                     </div>
                                 </div>
                                 
-                                {/* Könyv információ */}
                                 <div className="col-12">
                                     <Card.Body className="h-100 d-flex flex-column p-3">
-                                        {/* Alap információk - mindig látszik */}
+
                                         <div className="basic-info text-center">
                                             <Card.Title className="h6 mb-1">{konyv.cim}</Card.Title>
                                             <Card.Subtitle className="text-muted small mb-2">{konyv.szerzo}</Card.Subtitle>
-                                            
-                                            {/* Állapot és kategória badge-ek */}
                                             <div className="mb-2">
                                                 <Badge bg={getStatusBadgeVariant(konyv.allapot)} className="me-1 small">
                                                     {konyv.allapot || 'Ismeretlen'}
@@ -124,7 +103,6 @@ const Konyvek = () => {
                                             </div>
                                         </div>
 
-                                        {/* Részletes információk - csak ha kinyitva van */}
                                         {expandedKonyvId === konyv.konyv_id && (
                                             <div className="detailed-info flex-grow-1 mt-2">
                                                 <div className="book-details small">
@@ -152,7 +130,6 @@ const Konyvek = () => {
                                             </div>
                                         )}
 
-                                        {/* Gomb szekció */}
                                         <div className="mt-auto pt-2">
                                             <div className="d-flex justify-content-between align-items-center">
                                                 <Button 
@@ -183,49 +160,6 @@ const Konyvek = () => {
                     </Col>
                 ))}
             </Row>
-
-            {/* Modal részletekhez */}
-            <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Könyv részletei</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selectedKonyv && (
-                        <div className="text-center">
-                            <img 
-                                src={"http://localhost:8000/" + (selectedKonyv.kep || '')}
-                                alt={selectedKonyv.cim}
-                                className="img-fluid mb-3 rounded"
-                                style={{ maxHeight: '300px' }}
-                                onError={(e) => {
-                                    e.target.src = '/images/default-book.jpg';
-                                }}
-                            />
-                            <h4>{selectedKonyv.cim}</h4>
-                            <h5 className="text-muted">{selectedKonyv.szerzo}</h5>
-                            <div className="my-3">
-                                <Badge bg={getStatusBadgeVariant(selectedKonyv.allapot)} className="me-2">
-                                    {selectedKonyv.allapot}
-                                </Badge>
-                                <Badge bg="secondary">
-                                    {selectedKonyv.kategoria}
-                                </Badge>
-                            </div>
-                            <p><strong>Kiadó:</strong> {selectedKonyv.kiado}</p>
-                            <p><strong>Kiadás éve:</strong> {selectedKonyv.kiadas_ev}</p>
-                            <p>{selectedKonyv.leiras || 'Nincs leírás.'}</p>
-                        </div>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModal}>
-                        Bezárás
-                    </Button>
-                    <Button variant="primary" onClick={() => handleRequestBook(selectedKonyv)}>
-                        {user ? '🔄 Csere ajánlat' : 'Bejelentkezés szükséges'}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
         </div>
     );
 };
