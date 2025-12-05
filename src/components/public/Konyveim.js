@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Dropdown } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import { myAxios } from '../../contexts/MyAxios';
 
@@ -9,7 +9,8 @@ const Konyveim = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showUjKonyvModal, setShowUjKonyvModal] = useState(false);
-    
+    const [showSzerkesztesModal, setShowSzerkesztesModal] = useState(false);
+    const [kivalasztottKonyv, setKivalasztottKonyv] = useState(null);
     const [kepHiba, setKepHiba] = useState('');
     const [ujKonyvForm, setUjKonyvForm] = useState({
         cim: '',
@@ -22,6 +23,10 @@ const Konyveim = () => {
         kep: null,
         megjegyzes: '',
         statusz: 'elerheto'
+    });
+    const [szerkesztesForm, setSzerkesztesForm] = useState({
+        statusz: 'elerheto',
+        megjegyzes: ''
     });
 
     useEffect(() => {
@@ -43,41 +48,65 @@ const Konyveim = () => {
         }
     };
 
-    const handleStatusChange = async (felhasznaloKonyvId, ujStatusz) => {
+    // 🔥 SZERKESZTÉS MODAL MEGNYITÁSA
+    const handleSzerkesztes = (konyv) => {
+        setKivalasztottKonyv(konyv);
+        setSzerkesztesForm({
+            statusz: konyv.statusz,
+            megjegyzes: konyv.megjegyzes || ''
+        });
+        setShowSzerkesztesModal(true);
+    };
+
+    // 🔥 SZERKESZTÉS MENTÉSE
+    const handleSzerkesztesMentes = async () => {
+        if (!kivalasztottKonyv) return;
+
         try {
-            console.log('Státusz módosítás:', { felhasznaloKonyvId, ujStatusz });
+            console.log('Szerkesztés mentése:', { 
+                id: kivalasztottKonyv.id, 
+                ujAdatok: szerkesztesForm 
+            });
             
-            await myAxios.put(`/api/felhasznaloKonyvModosit/${felhasznaloKonyvId}`, {
-                statusz: ujStatusz
+            await myAxios.put(`/api/felhasznaloKonyvModosit/${kivalasztottKonyv.id}`, {
+                statusz: szerkesztesForm.statusz,
+                megjegyzes: szerkesztesForm.megjegyzes
             });
 
             // 🔥 FRISSÍTJÜK A LOCAL STATE-ET
             setSajatKonyvek(prevKonyvek => 
                 prevKonyvek.map(konyv => 
-                    konyv.id === felhasznaloKonyvId 
-                        ? { ...konyv, statusz: ujStatusz }
+                    konyv.id === kivalasztottKonyv.id 
+                        ? { 
+                            ...konyv, 
+                            statusz: szerkesztesForm.statusz,
+                            megjegyzes: szerkesztesForm.megjegyzes
+                        }
                         : konyv
                 )
             );
 
-            console.log('✅ Státusz sikeresen módosítva');
+            setShowSzerkesztesModal(false);
+            setKivalasztottKonyv(null);
+            
+            console.log('✅ Szerkesztés sikeresen mentve');
+            alert('A módosítások sikeresen elmentve!');
             
         } catch (error) {
-            console.error('❌ Hiba a státusz módosításakor:', error);
-            alert('Hiba történt a státusz módosításakor!');
+            console.error('❌ Hiba a szerkesztés mentésekor:', error);
+            alert('Hiba történt a módosítások mentésekor!');
         }
     };
 
-const getKepUrl = (konyv) => {
+    // 🔥 JAVÍTOTT KÉP URL GENERÁLÁS
+    const getKepUrl = (konyv) => {
         if (!konyv?.konyv?.kep) {
-            return 'http://localhost:8000/kepek/capaca.jpg'; 
+            return 'http://localhost:8000/kepek/capaca.jpg';
         }
         
         const kepUtvonal = konyv.konyv.kep;
         return `http://localhost:8000/${kepUtvonal}`;
     };
-
-        if (loading) return <div className="text-center mt-4">Betöltés...</div>;
 
     const handleKepValasztas = (e) => {
         const file = e.target.files[0];
@@ -208,7 +237,6 @@ const getKepUrl = (konyv) => {
 
     if (loading) return <div className="text-center mt-4">Betöltés...</div>;
 
-
     return (
         <Container className="mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -233,9 +261,11 @@ const getKepUrl = (konyv) => {
                     {sajatKonyvek.map((felhasznaloKonyv, index) => {    
                         const kepUrl = getKepUrl(felhasznaloKonyv);
                         const uniqueKey = `konyv-${felhasznaloKonyv.id}-${index}`;
+
                         return (
                             <Col key={uniqueKey} lg={4} md={6} className="mb-4">
                                 <Card className="h-100 shadow-sm">
+                                    {/* KÉP RÉSZ */}
                                     <div className="text-center p-3 bg-light" style={{ minHeight: '200px' }}>
                                         <img 
                                             src={kepUrl}
@@ -257,41 +287,11 @@ const getKepUrl = (konyv) => {
                                             {felhasznaloKonyv.konyv?.szerzo}
                                         </Card.Subtitle>
                                         
+                                        {/* STÁTUSZ ÉS BADGE-EK */}
                                         <div className="mb-2">
-                                            <Dropdown className="d-inline me-2">
-                                                <Dropdown.Toggle 
-                                                    variant="outline-secondary" 
-                                                    size="sm"
-                                                    id={`status-dropdown-${felhasznaloKonyv.id}`}
-                                                >
-                                                    {getStatuszIcon(felhasznaloKonyv.statusz)} Státusz
-                                                </Dropdown.Toggle>
-                                                <Dropdown.Menu>
-                                                    <Dropdown.Item 
-                                                        onClick={() => handleStatusChange(felhasznaloKonyv.id, 'elerheto')}
-                                                        className={felhasznaloKonyv.statusz === 'elerheto' ? 'active' : ''}
-                                                    >
-                                                        ✅ Elérhető
-                                                    </Dropdown.Item>
-                                                    <Dropdown.Item 
-                                                        onClick={() => handleStatusChange(felhasznaloKonyv.id, 'foglalt')}
-                                                        className={felhasznaloKonyv.statusz === 'foglalt' ? 'active' : ''}
-                                                    >
-                                                        🔄 Foglalt
-                                                    </Dropdown.Item>
-                                                    <Dropdown.Item 
-                                                        onClick={() => handleStatusChange(felhasznaloKonyv.id, 'elkelt')}
-                                                        className={felhasznaloKonyv.statusz === 'elkelt' ? 'active' : ''}
-                                                    >
-                                                        ❌ Elkelt
-                                                    </Dropdown.Item>
-                                                </Dropdown.Menu>
-                                            </Dropdown>
-                                            <Badge bg={getStatuszBadgeVariant(felhasznaloKonyv.statusz)}>
-                                                {felhasznaloKonyv.statusz}
+                                            <Badge bg={getStatuszBadgeVariant(felhasznaloKonyv.statusz)} className="me-1">
+                                                {getStatuszIcon(felhasznaloKonyv.statusz)} {felhasznaloKonyv.statusz}
                                             </Badge>
-                                        </div>
-                                        <div className="mb-2">
                                             <Badge bg={getAllapotBadgeVariant(felhasznaloKonyv.konyv?.allapot)} className="me-1">
                                                 {felhasznaloKonyv.konyv?.allapot}
                                             </Badge>
@@ -300,6 +300,7 @@ const getKepUrl = (konyv) => {
                                             </Badge>
                                         </div>
 
+                                        {/* KÖNYV INFÓK */}
                                         {felhasznaloKonyv.konyv?.kiado && (
                                             <p className="small mb-1">
                                                 <strong>Kiadó:</strong> {felhasznaloKonyv.konyv.kiado}
@@ -318,14 +319,25 @@ const getKepUrl = (konyv) => {
                                             </p>
                                         )}
 
-                                        <div className="mt-auto">
-                                            <Button 
-                                                variant="outline-danger" 
-                                                size="sm"
-                                                onClick={() => handleKonyvTorles(felhasznaloKonyv.id)}
-                                            >
-                                                Eltávolítás
-                                            </Button>
+                                        <div className="mt-auto pt-2">
+                                            <div className="d-flex gap-2">
+                                                <Button 
+                                                    variant="outline-primary" 
+                                                    size="sm"
+                                                    onClick={() => handleSzerkesztes(felhasznaloKonyv)}
+                                                    className="flex-grow-1"
+                                                >
+                                                    ✏️ Szerkesztés
+                                                </Button>
+                                                <Button 
+                                                    variant="outline-danger" 
+                                                    size="sm"
+                                                    onClick={() => handleKonyvTorles(felhasznaloKonyv.id)}
+                                                    className="flex-grow-1"
+                                                >
+                                                    🗑️ Eltávolítás
+                                                </Button>
+                                            </div>
                                         </div>
                                     </Card.Body>
                                 </Card>
@@ -335,11 +347,81 @@ const getKepUrl = (konyv) => {
                 </Row>
             )}
             
+            {/* 🔥 SZERKESZTÉS MODAL */}
+            <Modal show={showSzerkesztesModal} onHide={() => setShowSzerkesztesModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        ✏️ Könyv szerkesztése - {kivalasztottKonyv?.konyv?.cim}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {kivalasztottKonyv && (
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>
+                                    <strong>Státusz</strong>
+                                </Form.Label>
+                                <Form.Select 
+                                    value={szerkesztesForm.statusz}
+                                    onChange={(e) => setSzerkesztesForm({
+                                        ...szerkesztesForm, 
+                                        statusz: e.target.value
+                                    })}
+                                >
+                                    <option value="elerheto">✅ Elérhető (szeretném cserélni)</option>
+                                    <option value="foglalt">🔄 Foglalt (épp cserélem)</option>
+                                    <option value="elkelt">❌ Elkelt (már nincs meg)</option>
+                                </Form.Select>
+                                <Form.Text className="text-muted">
+                                    Válaszd ki a könyv aktuális állapotát
+                                </Form.Text>
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>
+                                    <strong>Saját megjegyzés</strong>
+                                </Form.Label>
+                                <Form.Control 
+                                    as="textarea" 
+                                    rows={3}
+                                    value={szerkesztesForm.megjegyzes}
+                                    onChange={(e) => setSzerkesztesForm({
+                                        ...szerkesztesForm, 
+                                        megjegyzes: e.target.value
+                                    })}
+                                    placeholder="Pl.: Kissé kopott a sarka, de olvasható..."
+                                />
+                                <Form.Text className="text-muted">
+                                    Opcionális megjegyzés a könyvhöz
+                                </Form.Text>
+                            </Form.Group>
+
+                            <div className="bg-light p-3 rounded small">
+                                <strong>Könyv adatai:</strong><br />
+                                <strong>Cím:</strong> {kivalasztottKonyv.konyv?.cim}<br />
+                                <strong>Szerző:</strong> {kivalasztottKonyv.konyv?.szerzo}<br />
+                                <strong>Állapot:</strong> {kivalasztottKonyv.konyv?.allapot}<br />
+                                <strong>Kategória:</strong> {kivalasztottKonyv.konyv?.kategoria}
+                            </div>
+                        </Form>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSzerkesztesModal(false)}>
+                        Mégse
+                    </Button>
+                    <Button variant="primary" onClick={handleSzerkesztesMentes}>
+                        💾 Módosítások mentése
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* ÚJ KÖNYV MODAL (VÁLTOZATLAN) */}
             <Modal show={showUjKonyvModal} onHide={() => setShowUjKonyvModal(false)} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>Új könyv hozzáadása</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                 <Modal.Body>
                     <Form>
                         <Row>
                             <Col md={6}>
@@ -434,6 +516,7 @@ const getKepUrl = (konyv) => {
                             />
                         </Form.Group>
 
+                        {/* KÖTELEZŐ KÉP RÉSZ */}
                         <Form.Group className="mb-3">
                             <Form.Label>Borítókép *</Form.Label>
                             <Form.Control 

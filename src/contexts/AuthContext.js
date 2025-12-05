@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const [token, setToken] = useState(localStorage.getItem("access_token"));
-  const [userProfilePic, setUserProfilePic] = useState(localStorage.getItem("userProfilePic") || "https://www.w3schools.com/howto/img_avatar.png");
 
   // CSRF cookie megszerzése
   const csrf = async () => {
@@ -17,18 +16,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Regisztráció
-  const regisztracio = async ({ nev, email, password, telefon, varos, cim }) => {
+  const regisztracio = async ({...adat}) => {
     await csrf();
     try {
-      await myAxios.post("/api/userAdd", {
-        nev: nev,
-        email: email,
-        password: password,
-        telefon: telefon,
-        varos: varos,
-        cim: cim,
-        szerep: 'felhasznalo' // Alapértelmezett szerep
-      });
+      await myAxios.post("/api/register", adat);
       navigate("/bejelentkezes");
     } catch (error) {
       console.log(
@@ -48,27 +39,15 @@ const login = async ({ email, password }) => {
       password: password,
     });
 
-    console.log("Login response:", response.data); // Debug
-
-    if (response.data && response.data.user && response.data.token) {
-      const { user, token } = response.data;
-      
-      // ✅ TOKEN MENTÉSE localStorage-ba
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      
-      setUser(user);
-      setIsLoggedIn(true);
-      setToken(token); // Állapot frissítése
-
-      console.log("Token elmentve:", token); // Debug
+    if (response.data && response.data.user) {
+        setUser(response.data.user);
+        setIsLoggedIn(true); // itt meg igazra állítja
+        localStorage.setItem("access_token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
 
       navigate("/konyv");
-    } else {
-      console.error("Hiányzó user vagy token a válaszban");
-      throw new Error("Sikertelen bejelentkezés");
-    }
-  } catch (error) {
+    } 
+   } catch (error) {
     console.log("Bejelentkezési hiba:", error);
     throw error;
   }
@@ -79,26 +58,32 @@ const login = async ({ email, password }) => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       setUser(null);
-      setUserProfilePic(null);
       return;
     }
   
     try {
-    const response = await myAxios.get("/api/user");
-    
-    if (!response.data) {
-      console.error("Hibás API válasz, nincs user adat.");
-      setUser(null);
-      return;
+     const response = await myAxios.get("api/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.data) {
+        console.error("Hibás API válasz, nincs user adat.");
+        setUser(null);
+        return;
+      }
+  
+      setUser(response.data);
+      
+      // 🔹 **Biztosan mentjük az új adatokat**
+      localStorage.setItem("user", JSON.stringify(response.data));
+      
+      console.log("Felhasználó betöltve:", response.data);
+    } catch (error) {
+      console.error("Felhasználó lekérdezési hiba:", error);
+      logout();
     }
-
-    setUser(response.data);
-    localStorage.setItem("user", JSON.stringify(response.data));
-    
-  } catch (error) {
-    console.error("Felhasználó lekérdezési hiba:", error);
-    logout();
-  }
   };
 
   // Felhasználó adatainak frissítése
@@ -128,7 +113,6 @@ const login = async ({ email, password }) => {
       console.log(error);
     } finally {
       setUser(null);
-      setUserProfilePic(null);
       setIsLoggedIn(false);
       
       localStorage.removeItem("user");
@@ -136,25 +120,6 @@ const login = async ({ email, password }) => {
   
       console.log("Logout sikeres, minden adat törölve.");
       navigate("/bejelentkezes");
-    }
-  };
-
-  // Profilkép frissítése
-  const updateProfilePic = (newProfilePic) => {
-    setUserProfilePic(newProfilePic);
-    localStorage.setItem("userProfilePic", newProfilePic);
-  };
-
-  // Fájl feltöltése és base64-re konvertálás
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64Image = reader.result;
-        updateProfilePic(base64Image);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -239,10 +204,6 @@ const login = async ({ email, password }) => {
       setIsLoggedIn(false);
       setUser(null);
     }
-
-    // Profilkép beállítása, ha van elmentett
-    const storedProfilePic = localStorage.getItem("userProfilePic");
-    setUserProfilePic(storedProfilePic || "https://www.w3schools.com/howto/img_avatar.png");
   }, []);
 
   useEffect(() => {
@@ -259,9 +220,6 @@ const login = async ({ email, password }) => {
         login,
         user,
         logout,
-        userProfilePic,
-        updateProfilePic,
-        handleFileUpload,
         updateUserData,
         
         // Könyvcsere specifikus funkciók

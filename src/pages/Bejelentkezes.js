@@ -26,7 +26,7 @@ export default function Bejelentkezes() {
   };
 
   const handleForgotPassword = () => {
-    navigate("/elfelejtett-jelszo"); // A megfelelő oldalra navigálás
+    navigate("/elfelejtett-jelszo");
   };
 
   return (

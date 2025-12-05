@@ -129,7 +129,7 @@ export default function Profil() {
               <div className="profile-section mt-4">
 
                 {/* Felhasználói adatok megjelenítése */}
-                <div className="user-info mt-4">
+                <div className="user-info mt-4 text-center">
                   <h4>Profil Információk</h4>
                   <p><strong>Felhasználónév:</strong> {username || "Nincs megadva"}</p>
                   <p><strong>Email cím:</strong> {email || "Nincs email megadva"}</p>
